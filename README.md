@@ -1,5 +1,6 @@
+# 🌾 AgriSwarm: MCP-Powered Autonomous Agricultural Advisor
 
-AgriSwarm is a multi-agent system designed to monitor agricultural data and autonomously dispatch localized interventions to farmers. Built for Hackathon 2026.
+AgriSwarm is a multi-agent system designed to monitor agricultural data and autonomously dispatch localized interventions to farmers.
 
 ## Architecture
 - **Data Scraper:** Pulls mock IoT sensor data and API weather forecasts.
