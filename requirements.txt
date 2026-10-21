@@ -1,0 +1,21 @@
+# Multi-Agent Frameworks
+langgraph==0.0.26
+langchain==0.1.13
+crewai==0.22.5
+
+# Tools & Tooling Standard
+mcp==1.0.0
+beautifulsoup4==4.12.3
+twilio==8.1.0
+
+# Database / Memory
+supabase==2.3.4
+pinecone-client==3.1.0
+
+# LLM Providers
+anthropic==0.20.0
+openai==1.14.2
+
+# Utilities
+python-dotenv==1.0.1
+pydantic==2.6.4
