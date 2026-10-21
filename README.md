@@ -1,0 +1,2 @@
+# AgriSwarm-MCP-Powered-Autonomous-Agricultural-Advisor
+AgriSwarm is an autonomous, MCP-powered multi-agent system designed for agricultural resilience. It continuously monitors live environmental and soil data. When anomalies like frost or drought are detected, specialized AI agents instantly collaborate to formulate and dispatch actionable, localized agronomic alerts directly to farmers via SMS.
