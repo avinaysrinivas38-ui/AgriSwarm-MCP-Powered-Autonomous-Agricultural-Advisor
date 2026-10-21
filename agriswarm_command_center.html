@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriSwarm Multi-Agent Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom scrollbar for the log terminal */
+        .terminal-scroll::-webkit-scrollbar { width: 8px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .terminal-scroll::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .agent-card { transition: all 0.3s ease; }
+        .agent-active { box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); border-color: #38bdf8; }
+        
+        .farm-zone { transition: background-color 0.5s ease; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 lg:p-8">
+
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-3 mb-4 md:mb-0">
+            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M11 20a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/><path d="M16 20a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/><path d="M12 4v7"/></svg>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-white">AgriSwarm<span class="text-emerald-500">.ai</span></h1>
+                <p class="text-xs text-slate-400 uppercase tracking-widest">Autonomous Swarm Orchestration v2.4</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 text-sm">
+            <div class="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-full border border-slate-700">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span class="text-slate-300">System Online</span>
+            </div>
+            <div class="text-slate-400">Location: <span class="text-white font-medium">Punjab, India (Zone 4)</span></div>
+        </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Top Row: Agent Status Indicators -->
+        <section class="lg:col-span-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Data Scraper -->
+            <div id="agent-scraper" class="agent-card bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-blue-500/20 text-blue-400 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+                    </div>
+                    <span id="badge-scraper" class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full bg-slate-700 text-slate-300">Idle</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">Data Scraper</h3>
+                    <p class="text-xs text-slate-400">MCP: Weather & Sensors</p>
+                </div>
+            </div>
+
+            <!-- Agronomy Engine -->
+            <div id="agent-agronomy" class="agent-card bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-purple-500/20 text-purple-400 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <span id="badge-agronomy" class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full bg-slate-700 text-slate-300">Idle</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">Agronomy Engine</h3>
+                    <p class="text-xs text-slate-400">RAG: Crop Science</p>
+                </div>
+            </div>
+
+            <!-- Supervisor -->
+            <div id="agent-supervisor" class="agent-card bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-amber-500/20 text-amber-400 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <span id="badge-supervisor" class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full bg-slate-700 text-slate-300">Idle</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">Supervisor Agent</h3>
+                    <p class="text-xs text-slate-400">Audit & Validation</p>
+                </div>
+            </div>
+
+            <!-- Localization -->
+            <div id="agent-localization" class="agent-card bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </div>
+                    <span id="badge-localization" class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full bg-slate-700 text-slate-300">Idle</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">Localization & Comms</h3>
+                    <p class="text-xs text-slate-400">Twilio & Translation</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Left Column: Farm Overview & Controls -->
+        <section class="lg:col-span-4 flex flex-col gap-6">
+            
+            <!-- Farm Overview -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-5 shadow-lg">
+                <h2 class="text-sm uppercase tracking-widest text-slate-400 font-semibold mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>
+                    Sensor Telemetry
+                </h2>
+                
+                <!-- Sensor Map -->
+                <div class="grid grid-cols-3 gap-2 mb-6 aspect-video bg-slate-900/50 p-2 rounded-lg border border-slate-700/50">
+                    <div id="zone-1" class="farm-zone bg-emerald-500/20 border border-emerald-500/30 rounded flex items-center justify-center text-[10px] text-emerald-300">Z1</div>
+                    <div id="zone-2" class="farm-zone bg-emerald-500/20 border border-emerald-500/30 rounded flex items-center justify-center text-[10px] text-emerald-300">Z2</div>
+                    <div id="zone-3" class="farm-zone bg-emerald-500/20 border border-emerald-500/30 rounded flex items-center justify-center text-[10px] text-emerald-300">Z3</div>
+                    <div id="zone-4" class="farm-zone bg-emerald-500/20 border border-emerald-500/30 rounded flex items-center justify-center text-[10px] text-emerald-300">Z4</div>
+                    <div id="zone-5" class="farm-zone bg-emerald-500/20 border border-emerald-500/30 rounded flex items-center justify-center text-[10px] text-emerald-300">Z5</div>
+                    <div id="zone-6" class="farm-zone bg-emerald-500/20 border border-emerald-500/30 rounded flex items-center justify-center text-[10px] text-emerald-300">Z6</div>
+                </div>
+
+                <!-- Sensor Readouts -->
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-400 mb-1"><span>Ambient Temp</span><span id="readout-temp" class="text-white font-mono">24.5 °C</span></div>
+                        <div class="w-full bg-slate-700 rounded-full h-1.5"><div id="bar-temp" class="bg-blue-400 h-1.5 rounded-full transition-all duration-500" style="width: 60%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-400 mb-1"><span>Soil Moisture</span><span id="readout-moisture" class="text-white font-mono">42.0 %</span></div>
+                        <div class="w-full bg-slate-700 rounded-full h-1.5"><div id="bar-moisture" class="bg-cyan-400 h-1.5 rounded-full transition-all duration-500" style="width: 42%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-400 mb-1"><span>Fertilizer Price Index</span><span id="readout-price" class="text-white font-mono">₹1,250/bag</span></div>
+                        <div class="w-full bg-slate-700 rounded-full h-1.5"><div id="bar-price" class="bg-emerald-400 h-1.5 rounded-full transition-all duration-500" style="width: 30%"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulation Controls -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-5 shadow-lg flex-grow">
+                <h2 class="text-sm uppercase tracking-widest text-slate-400 font-semibold mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M2 12h20"/><path d="m19 19-3-3"/><path d="m5 5 3 3"/><path d="m19 5-3 3"/><path d="m5 19 3-3"/></svg>
+                    Anomaly Injection (Hackathon Mocks)
+                </h2>
+                <p class="text-xs text-slate-400 mb-4">Trigger events to demonstrate the multi-agent workflow.</p>
+                
+                <div class="space-y-3">
+                    <button onclick="triggerScenario('frost')" class="w-full bg-slate-700 hover:bg-blue-600/50 border border-slate-600 hover:border-blue-400 text-left px-4 py-3 rounded-lg text-sm font-medium transition-all group flex justify-between items-center">
+                        <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-400"></span> Simulate Frost Impending</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-0 group-hover:opacity-100 transition-opacity"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                    <button onclick="triggerScenario('drought')" class="w-full bg-slate-700 hover:bg-orange-600/50 border border-slate-600 hover:border-orange-400 text-left px-4 py-3 rounded-lg text-sm font-medium transition-all group flex justify-between items-center">
+                        <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-orange-400"></span> Simulate Critical Soil Moisture</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-0 group-hover:opacity-100 transition-opacity"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                    <button onclick="triggerScenario('market')" class="w-full bg-slate-700 hover:bg-rose-600/50 border border-slate-600 hover:border-rose-400 text-left px-4 py-3 rounded-lg text-sm font-medium transition-all group flex justify-between items-center">
+                        <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-rose-400"></span> Spike Urea Market Price</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-0 group-hover:opacity-100 transition-opacity"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                    <button onclick="resetSystem()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-center px-4 py-2 rounded-lg text-xs font-medium transition-all mt-4 text-slate-400 hover:text-white">
+                        Reset Environment
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Live Event Log (Terminal) -->
+        <section class="lg:col-span-8 flex flex-col">
+            <div class="bg-black border border-slate-700 rounded-xl shadow-xl overflow-hidden flex flex-col h-[600px]">
+                
+                <!-- Terminal Header -->
+                <div class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex justify-between items-center">
+                    <h2 class="text-sm text-slate-300 font-mono flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+                        agent_orchestrator_log.sh
+                    </h2>
+                    <div class="flex gap-1.5">
+                        <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                        <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                        <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                    </div>
+                </div>
+
+                <!-- Terminal Body -->
+                <div id="terminal-body" class="flex-1 p-4 overflow-y-auto terminal-scroll font-mono text-xs md:text-sm space-y-2 bg-[#050505]">
+                    <div class="text-slate-500">Initializing AgriSwarm Multi-Agent System...</div>
+                    <div class="text-slate-500">Connecting to MCP servers (Weather API, Soil Sensors, Agri-Market DB)... <span class="text-emerald-500">OK</span></div>
+                    <div class="text-slate-500">Supervisor agent online and enforcing strict guardrails... <span class="text-emerald-500">OK</span></div>
+                    <div class="text-slate-500 mb-4">Awaiting environmental triggers...</div>
+                    <!-- Logs injected here -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Utility for async delays
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+        
+        const terminalBody = document.getElementById('terminal-body');
+        let isSimulating = false;
+        let backgroundPolling;
+
+        // Base Farm State
+        const baseState = {
+            temp: { val: 24.5, str: '24.5 °C', pct: 60, color: 'bg-blue-400' },
+            moisture: { val: 42.0, str: '42.0 %', pct: 42, color: 'bg-cyan-400' },
+            price: { val: 1250, str: '₹1,250/bag', pct: 30, color: 'bg-emerald-400' }
+        };
+
+        // --- UI Updaters ---
+
+        function updateAgentState(agentId, state) {
+            const card = document.getElementById(`agent-${agentId}`);
+            const badge = document.getElementById(`badge-${agentId}`);
+            
+            // Reset classes
+            card.classList.remove('agent-active', 'border-blue-400', 'border-purple-400', 'border-amber-400', 'border-emerald-400');
+            badge.classList.remove('bg-slate-700', 'text-slate-300', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-emerald-500', 'text-white', 'animate-pulse');
+            
+            if (state === 'Processing') {
+                card.classList.add('agent-active');
+                badge.classList.add('text-white', 'animate-pulse');
+                badge.innerText = 'Processing';
+                
+                // Color mapping
+                if(agentId === 'scraper') { card.classList.add('border-blue-400'); badge.classList.add('bg-blue-500'); }
+                if(agentId === 'agronomy') { card.classList.add('border-purple-400'); badge.classList.add('bg-purple-500'); }
+                if(agentId === 'supervisor') { card.classList.add('border-amber-400'); badge.classList.add('bg-amber-500'); }
+                if(agentId === 'localization') { card.classList.add('border-emerald-400'); badge.classList.add('bg-emerald-500'); }
+            } else {
+                badge.classList.add('bg-slate-700', 'text-slate-300');
+                badge.innerText = 'Idle';
+            }
+        }
+
+        function appendLog(agent, action, level = 'info') {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "numeric", minute: "numeric", second: "numeric" });
+            
+            let colorClass = 'text-slate-300';
+            let prefix = '[INFO]';
+            
+            if (level === 'warning') { colorClass = 'text-amber-400'; prefix = '[WARN]'; }
+            else if (level === 'critical') { colorClass = 'text-rose-500'; prefix = '[CRIT]'; }
+            else if (level === 'success') { colorClass = 'text-emerald-400'; prefix = '[SUCCESS]'; }
+            
+            let agentTag = '';
+            if(agent) {
+                const agentColors = {
+                    'Scraper': 'text-blue-400',
+                    'Agronomy': 'text-purple-400',
+                    'Supervisor': 'text-amber-400',
+                    'Comms': 'text-emerald-400',
+                    'System': 'text-slate-500'
+                };
+                agentTag = `<span class="${agentColors[agent] || 'text-white'} font-bold">&lt;${agent}&gt;</span> `;
+            }
+
+            const div = document.createElement('div');
+            div.innerHTML = `<span class="text-slate-600">[${time}]</span> <span class="${colorClass}">${prefix}</span> ${agentTag}<span class="text-slate-300">${action}</span>`;
+            terminalBody.appendChild(div);
+            
+            // Auto scroll
+            terminalBody.scrollTop = terminalBody.scrollHeight;
+        }
+
+        function updateSensorReadout(sensor, valStr, percentage, colorClass) {
+            document.getElementById(`readout-${sensor}`).innerText = valStr;
+            const bar = document.getElementById(`bar-${sensor}`);
+            bar.style.width = `${percentage}%`;
+            bar.className = `${colorClass} h-1.5 rounded-full transition-all duration-500`;
+        }
+
+        function setFarmZoneAlert(type) {
+            const zones = document.querySelectorAll('.farm-zone');
+            zones.forEach((zone, i) => {
+                // Reset
+                zone.className = 'farm-zone bg-emerald-500/20 border border-emerald-500/30 rounded flex items-center justify-center text-[10px] text-emerald-300';
+                
+                if (type === 'frost' && (i === 0 || i === 1)) {
+                    zone.className = 'farm-zone bg-blue-500/40 border border-blue-500 rounded flex items-center justify-center text-[10px] text-blue-200 animate-pulse';
+                }
+                if (type === 'drought' && (i === 4 || i === 5)) {
+                    zone.className = 'farm-zone bg-orange-500/40 border border-orange-500 rounded flex items-center justify-center text-[10px] text-orange-200 animate-pulse';
+                }
+            });
+        }
+
+        // --- Core Simulation Logic ---
+
+        async function triggerScenario(type) {
+            if (isSimulating) return;
+            isSimulating = true;
+            clearInterval(backgroundPolling); // Stop random logs
+
+            appendLog('System', `--- INITIATING MANUAL OVERRIDE: SIMULATION '${type.toUpperCase()}' ---`, 'info');
+            await sleep(500);
+
+            if (type === 'frost') {
+                // 1. Data changes
+                updateSensorReadout('temp', '-2.4 °C', 10, 'bg-blue-600');
+                setFarmZoneAlert('frost');
+                await sleep(800);
+
+                // 2. Scraper Detects
+                updateAgentState('scraper', 'Processing');
+                appendLog('Scraper', 'Via OpenWeather MCP: Predicted temp drop to -2.4°C in Zone 1 & 2 tonight.', 'critical');
+                await sleep(1500);
+                updateAgentState('scraper', 'Idle');
+
+                // 3. Agronomy Analyzes
+                updateAgentState('agronomy', 'Processing');
+                appendLog('Agronomy', 'Received frost alert. Querying Vector DB for winter wheat mitigation...', 'info');
+                await sleep(1200);
+                appendLog('Agronomy', 'Recommendation: Deploy thermal blankets in Zone 1-2; initiate mild preventive irrigation.', 'success');
+                await sleep(800);
+                updateAgentState('agronomy', 'Idle');
+
+                // 4. Supervisor Audits
+                updateAgentState('supervisor', 'Processing');
+                appendLog('Supervisor', 'Auditing Agronomy output. Checking local water quotas...', 'info');
+                await sleep(1500);
+                appendLog('Supervisor', 'Output verified. Recommendation is safe and within resource limits. Approving dispatch.', 'success');
+                updateAgentState('supervisor', 'Idle');
+
+                // 5. Localization Formats & Sends
+                updateAgentState('localization', 'Processing');
+                appendLog('Comms', 'Formatting alert for recipient preferences (Language: Punjabi).', 'info');
+                await sleep(1000);
+                appendLog('Comms', 'Message dispatched via Twilio MCP to +91-XXXXX-XXXXX. WhatsApp delivered.', 'success');
+                updateAgentState('localization', 'Idle');
+            } 
+            else if (type === 'drought') {
+                updateSensorReadout('moisture', '14.2 %', 14, 'bg-orange-500');
+                setFarmZoneAlert('drought');
+                await sleep(800);
+
+                updateAgentState('scraper', 'Processing');
+                appendLog('Scraper', 'Via IoT Sensors MCP: Soil moisture dropped below 15% threshold in Zone 5 & 6.', 'warning');
+                await sleep(1200);
+                updateAgentState('scraper', 'Idle');
+
+                updateAgentState('agronomy', 'Processing');
+                appendLog('Agronomy', 'Analyzing drought stress for current crop stage (Flowering).', 'info');
+                await sleep(1500);
+                appendLog('Agronomy', 'Recommendation: Activate drip irrigation schedule B immediately to prevent yield loss.', 'success');
+                await sleep(800);
+                updateAgentState('agronomy', 'Idle');
+
+                updateAgentState('supervisor', 'Processing');
+                appendLog('Supervisor', 'Reviewing irrigation command. Guardrail check passed.', 'success');
+                updateAgentState('supervisor', 'Idle');
+
+                updateAgentState('localization', 'Processing');
+                appendLog('Comms', 'Sending automated command to smart irrigation system and alerting farmer.', 'info');
+                await sleep(1000);
+                appendLog('Comms', 'IoT Command successful. SMS alert sent.', 'success');
+                updateAgentState('localization', 'Idle');
+            }
+            else if (type === 'market') {
+                updateSensorReadout('price', '₹1,950/bag', 85, 'bg-rose-500');
+                await sleep(800);
+
+                updateAgentState('scraper', 'Processing');
+                appendLog('Scraper', 'Via GovMarket API MCP: Urea prices spiked 56% in local mandi.', 'warning');
+                await sleep(1500);
+                updateAgentState('scraper', 'Idle');
+
+                updateAgentState('agronomy', 'Processing');
+                appendLog('Agronomy', 'Evaluating fertilizer schedule. Next application due in 4 days.', 'info');
+                await sleep(1800);
+                appendLog('Agronomy', 'Alternative discovered: Recommend substituting with Nano Urea or delaying application 1 week based on forecast.', 'success');
+                await sleep(800);
+                updateAgentState('agronomy', 'Idle');
+
+                updateAgentState('supervisor', 'Processing');
+                appendLog('Supervisor', 'Verifying substitute availability locally... Confirmed in stock.', 'success');
+                updateAgentState('supervisor', 'Idle');
+
+                updateAgentState('localization', 'Processing');
+                appendLog('Comms', 'Generating cost-saving advisory message (Language: Hindi).', 'info');
+                await sleep(1200);
+                appendLog('Comms', 'Advisory dispatched to WhatsApp. "Save ₹700 by switching to Nano Urea today.".', 'success');
+                updateAgentState('localization', 'Idle');
+            }
+
+            appendLog('System', 'Workflow complete. Returning to autonomous monitoring.', 'info');
+            isSimulating = false;
+            startBackgroundPolling();
+        }
+
+        function resetSystem() {
+            if(isSimulating) return;
+            updateSensorReadout('temp', baseState.temp.str, baseState.temp.pct, baseState.temp.color);
+            updateSensorReadout('moisture', baseState.moisture.str, baseState.moisture.pct, baseState.moisture.color);
+            updateSensorReadout('price', baseState.price.str, baseState.price.pct, baseState.price.color);
+            setFarmZoneAlert('normal');
+            appendLog('System', 'Environment reset to nominal levels.', 'info');
+        }
+
+        // --- Idle Background Activity ---
+        function startBackgroundPolling() {
+            backgroundPolling = setInterval(async () => {
+                if (isSimulating) return;
+                
+                const r = Math.random();
+                if (r > 0.6) {
+                    updateAgentState('scraper', 'Processing');
+                    await sleep(400);
+                    appendLog('Scraper', 'Routine check: Polled weather APIs. Nominal.', 'info');
+                    updateAgentState('scraper', 'Idle');
+                } else if (r < 0.2) {
+                    updateAgentState('scraper', 'Processing');
+                    await sleep(300);
+                    appendLog('Scraper', 'Routine check: Synced local soil IoT data. Nominal.', 'info');
+                    updateAgentState('scraper', 'Idle');
+                }
+            }, 6000);
+        }
+
+        // Init
+        startBackgroundPolling();
+
+    </script>
+</body>
+</html>
